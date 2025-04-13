@@ -28,7 +28,10 @@ export const LoginComponent = () => {
     setIsLoading(true);
     
     try {
-      const user = await login(email, password);
+      const cleanEmail = email.trim().toLowerCase();
+      console.log("Attempting login with email:", cleanEmail);
+      
+      const user = await login(cleanEmail, password);
       
       if (!user) {
         throw new Error("Login failed");
@@ -36,32 +39,29 @@ export const LoginComponent = () => {
       
       toast({
         title: "Login successful",
-        description: "You are now logged in to your dashboard",
+        description: `Welcome, ${user.name}!`,
       });
       
-      console.log("Redirecting based on role:", user.role);
+      console.log("Login successful. Redirecting user with role:", user.role);
       
       // Navigate based on user role
-      switch (user.role) {
-        case 'super-admin':
-          navigate('/dashboard/admin');
-          break;
-        case 'teacher':
-          navigate('/dashboard/teacher');
-          break;
-        case 'student':
-          navigate('/dashboard/student');
-          break;
-        default:
-          navigate('/dashboard');
+      if (user.role === 'super-admin') {
+        navigate('/dashboard/admin');
+      } else if (user.role === 'teacher') {
+        navigate('/dashboard/teacher');
+      } else if (user.role === 'student') {
+        navigate('/dashboard/student');
+      } else {
+        // Fallback default
+        navigate('/dashboard');
       }
     } catch (error) {
+      console.error("Login error:", error);
       toast({
         title: "Login failed",
         description: "Invalid credentials. Please try again.",
         variant: "destructive",
       });
-      console.error("Login error:", error);
     } finally {
       setIsLoading(false);
     }

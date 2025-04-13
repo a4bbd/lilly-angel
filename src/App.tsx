@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import Index from "./pages/Index";
 import Courses from "./pages/Courses";
 import About from "./pages/About";
@@ -66,6 +66,8 @@ const App = () => (
             
             {/* Dashboard routes with role-based access */}
             <Route path="/dashboard" element={<DashboardLayout />}>
+              <Route index element={<Navigate to="/dashboard/admin" replace />} />
+              
               {/* Super Admin Routes */}
               <Route path="admin" element={<SuperAdminDashboard />} />
               <Route path="admin/teachers" element={<ManageTeachers />} />

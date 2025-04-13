@@ -30,6 +30,14 @@ const DashboardLayout = () => {
     setIsClient(true);
   }, []);
 
+  // Debug the current user and location
+  useEffect(() => {
+    if (user) {
+      console.log("Dashboard user:", user.name, "role:", user.role);
+      console.log("Current location:", location.pathname);
+    }
+  }, [user, location]);
+
   // Check authentication status
   useEffect(() => {
     if (isClient && !isLoading && !user) {
@@ -54,39 +62,39 @@ const DashboardLayout = () => {
 
   // Redirect to login if not authenticated
   if (!user) {
+    console.log("No user found, redirecting to login");
     return <Navigate to="/login" replace />;
   }
 
   // Handle role-based routing
   const shouldRedirect = () => {
+    if (!user) return "/login";
+    
     const path = location.pathname;
     const role = user.role;
+    console.log("Checking if redirect needed for path:", path, "with role:", role);
     
     // Handle base dashboard route
     if (path === "/dashboard") {
-      switch (role) {
-        case "super-admin": return "/dashboard/admin";
-        case "teacher": return "/dashboard/teacher";
-        case "student": return "/dashboard/student";
-        default: return false;
-      }
+      if (role === "super-admin") return "/dashboard/admin";
+      if (role === "teacher") return "/dashboard/teacher";
+      if (role === "student") return "/dashboard/student";
     }
     
-    // Handle role-specific routing
-    const isAdminPath = path.startsWith("/dashboard/admin");
-    const isTeacherPath = path.startsWith("/dashboard/teacher");
-    const isStudentPath = path.startsWith("/dashboard/student");
-    
-    if (role === "super-admin" && !isAdminPath) {
-      return "/dashboard/admin";
+    // Check access to role-specific paths
+    if (path.startsWith("/dashboard/admin") && role !== "super-admin") {
+      console.log("Redirecting: not admin");
+      return `/dashboard/${role === "teacher" ? "teacher" : "student"}`;
     }
     
-    if (role === "teacher" && !isTeacherPath) {
-      return "/dashboard/teacher";
+    if (path.startsWith("/dashboard/teacher") && role !== "teacher") {
+      console.log("Redirecting: not teacher");
+      return `/dashboard/${role === "super-admin" ? "admin" : "student"}`;
     }
     
-    if (role === "student" && !isStudentPath) {
-      return "/dashboard/student";
+    if (path.startsWith("/dashboard/student") && role !== "student") {
+      console.log("Redirecting: not student");
+      return `/dashboard/${role === "super-admin" ? "admin" : "teacher"}`;
     }
     
     return false;

@@ -51,6 +51,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       try {
         const parsedUser = JSON.parse(storedUser);
         setUser(parsedUser);
+        console.log("Session restored for user:", parsedUser);
       } catch (error) {
         console.error("Failed to parse stored user:", error);
         localStorage.removeItem("user");
@@ -62,6 +63,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const login = async (email: string, password: string): Promise<User | null> => {
     setIsLoading(true);
     try {
+      // For debugging
+      console.log("Login attempt with email:", email);
+      
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       
@@ -71,14 +75,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       );
       
       if (!foundUser) {
+        console.error("User not found for email:", email);
         throw new Error("Invalid credentials");
       }
       
-      // In real app, validate password here
-      
+      // Store the exact user object from MOCK_USERS
       setUser(foundUser);
       localStorage.setItem("user", JSON.stringify(foundUser));
-      console.log("Login successful:", foundUser);
+      console.log("Login successful. User role:", foundUser.role);
       return foundUser;
     } catch (error) {
       console.error("Login failed:", error);
@@ -91,10 +95,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const logout = () => {
     setUser(null);
     localStorage.removeItem("user");
+    console.log("User logged out");
   };
 
   const checkRole = (roles: string[]) => {
     if (!user) return false;
+    console.log("Checking role:", user.role, "against allowed roles:", roles);
     return roles.includes(user.role);
   };
 
