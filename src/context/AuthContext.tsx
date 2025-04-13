@@ -5,7 +5,7 @@ import { User } from "@/types/dashboard";
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User | null>;
   logout: () => void;
   checkRole: (roles: string[]) => boolean;
 }
@@ -53,22 +53,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User | null> => {
     setIsLoading(true);
     try {
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Find user with matching email (just for demo)
-      const user = MOCK_USERS.find(u => u.email === email);
-      if (!user) {
+      const foundUser = MOCK_USERS.find(u => u.email === email);
+      if (!foundUser) {
         throw new Error("Invalid credentials");
       }
       
       // In real app, validate password here
       
-      setUser(user);
-      localStorage.setItem("user", JSON.stringify(user));
+      setUser(foundUser);
+      localStorage.setItem("user", JSON.stringify(foundUser));
+      return foundUser;
     } catch (error) {
       console.error("Login failed:", error);
       throw error;
