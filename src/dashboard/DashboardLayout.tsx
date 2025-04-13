@@ -31,7 +31,7 @@ const DashboardLayout = () => {
     setIsClient(true);
   }, []);
 
-  // Only show toast and redirect in useEffect, not during render
+  // Only check authentication in useEffect, not during render
   useEffect(() => {
     if (isClient && !isLoading && !user) {
       toast({
@@ -42,7 +42,7 @@ const DashboardLayout = () => {
       setShouldRedirect(true);
     }
   }, [isClient, isLoading, user, toast]);
-
+  
   // Show loading state
   if (isLoading || !isClient) {
     return (
@@ -54,7 +54,47 @@ const DashboardLayout = () => {
 
   // Redirect to login if not authenticated
   if (shouldRedirect) {
-    return <Navigate to="/" />;
+    return <Navigate to="/login" />;
+  }
+
+  // Check if user is on correct role path
+  const checkAndRedirectRole = () => {
+    if (!user) return false;
+    
+    const currentPath = location.pathname;
+    const userRole = user.role;
+    
+    // If user is on /dashboard, redirect to appropriate role-based path
+    if (currentPath === '/dashboard') {
+      return getDashboardRoot();
+    }
+    
+    // Check if the user is accessing an allowed path
+    if (userRole === 'super-admin' && !currentPath.includes('/dashboard/admin')) {
+      return '/dashboard/admin';
+    }
+    if (userRole === 'teacher' && !currentPath.includes('/dashboard/teacher')) {
+      return '/dashboard/teacher';
+    }
+    if (userRole === 'student' && !currentPath.includes('/dashboard/student')) {
+      return '/dashboard/student';
+    }
+    
+    return false; // No redirect needed
+  };
+
+  // Figure out which dashboard to show based on role
+  const getDashboardRoot = () => {
+    if (user?.role === 'super-admin') return '/dashboard/admin';
+    if (user?.role === 'teacher') return '/dashboard/teacher';
+    if (user?.role === 'student') return '/dashboard/student';
+    return '/login';
+  };
+
+  // Redirect to appropriate dashboard if needed
+  const redirectPath = checkAndRedirectRole();
+  if (redirectPath) {
+    return <Navigate to={redirectPath} />;
   }
 
   const handleLogout = () => {
@@ -65,19 +105,6 @@ const DashboardLayout = () => {
     });
     navigate('/');
   };
-
-  // Figure out which dashboard to show based on role
-  const getDashboardRoot = () => {
-    if (user?.role === 'super-admin') return '/dashboard/admin';
-    if (user?.role === 'teacher') return '/dashboard/teacher';
-    if (user?.role === 'student') return '/dashboard/student';
-    return '/';
-  };
-
-  // Redirect to appropriate dashboard index if at /dashboard
-  if (location.pathname === '/dashboard') {
-    return <Navigate to={getDashboardRoot()} />;
-  }
 
   return (
     <SidebarProvider defaultOpen={true}>
