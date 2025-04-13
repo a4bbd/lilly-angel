@@ -60,7 +60,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       await new Promise(resolve => setTimeout(resolve, 500));
       
       // Find user with matching email (just for demo)
-      const foundUser = MOCK_USERS.find(u => u.email === email);
+      const foundUser = MOCK_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
       if (!foundUser) {
         throw new Error("Invalid credentials");
       }

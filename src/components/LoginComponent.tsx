@@ -29,18 +29,19 @@ export const LoginComponent = () => {
     
     try {
       const user = await login(email, password);
+      if (!user) throw new Error("Login failed");
       
       toast({
         title: "Login successful",
         description: "You are now logged in to your dashboard",
       });
       
-      // Navigate to the correct dashboard based on role
-      if (user?.role === 'super-admin') {
+      // Navigate based on user role
+      if (user.role === 'super-admin') {
         navigate('/dashboard/admin');
-      } else if (user?.role === 'teacher') {
+      } else if (user.role === 'teacher') {
         navigate('/dashboard/teacher');
-      } else if (user?.role === 'student') {
+      } else if (user.role === 'student') {
         navigate('/dashboard/student');
       } else {
         navigate('/dashboard');
