@@ -25,23 +25,23 @@ const DashboardLayout = () => {
   const location = useLocation();
   const { toast } = useToast();
   const [isClient, setIsClient] = useState(false);
-  const [shouldRedirect, setShouldRedirect] = useState(false);
 
   useEffect(() => {
     setIsClient(true);
   }, []);
 
-  // Check authentication status in useEffect
+  // Check authentication status
   useEffect(() => {
     if (isClient && !isLoading && !user) {
+      console.log("User not authenticated, redirecting to login");
       toast({
         title: "Authentication required",
         description: "Please login to access the dashboard",
         variant: "destructive",
       });
-      setShouldRedirect(true);
+      navigate("/login", { replace: true });
     }
-  }, [isClient, isLoading, user, toast]);
+  }, [isClient, isLoading, user, toast, navigate]);
   
   // Show loading state
   if (isLoading || !isClient) {
@@ -53,56 +53,48 @@ const DashboardLayout = () => {
   }
 
   // Redirect to login if not authenticated
-  if (shouldRedirect) {
-    return <Navigate to="/login" />;
+  if (!user) {
+    return <Navigate to="/login" replace />;
   }
 
-  // Determine which dashboard to show based on role
-  const getDashboardRoot = () => {
-    if (!user) return '/login';
+  // Handle role-based routing
+  const shouldRedirect = () => {
+    const path = location.pathname;
+    const role = user.role;
     
-    if (user.role === 'super-admin') return '/dashboard/admin';
-    if (user.role === 'teacher') return '/dashboard/teacher';
-    if (user.role === 'student') return '/dashboard/student';
+    // Handle base dashboard route
+    if (path === "/dashboard") {
+      switch (role) {
+        case "super-admin": return "/dashboard/admin";
+        case "teacher": return "/dashboard/teacher";
+        case "student": return "/dashboard/student";
+        default: return false;
+      }
+    }
     
-    return '/login';
+    // Handle role-specific routing
+    const isAdminPath = path.startsWith("/dashboard/admin");
+    const isTeacherPath = path.startsWith("/dashboard/teacher");
+    const isStudentPath = path.startsWith("/dashboard/student");
+    
+    if (role === "super-admin" && !isAdminPath) {
+      return "/dashboard/admin";
+    }
+    
+    if (role === "teacher" && !isTeacherPath) {
+      return "/dashboard/teacher";
+    }
+    
+    if (role === "student" && !isStudentPath) {
+      return "/dashboard/student";
+    }
+    
+    return false;
   };
 
-  // Check if user is on the correct path for their role
-  const checkRolePath = () => {
-    if (!user) return false;
-    
-    const currentPath = location.pathname;
-    const userRole = user.role;
-    
-    // If at base dashboard path, redirect to role-specific dashboard
-    if (currentPath === '/dashboard') {
-      return getDashboardRoot();
-    }
-    
-    // Role-based path checking
-    const isAdminPath = currentPath.includes('/dashboard/admin');
-    const isTeacherPath = currentPath.includes('/dashboard/teacher');
-    const isStudentPath = currentPath.includes('/dashboard/student');
-    
-    if (userRole === 'super-admin' && !isAdminPath) {
-      return '/dashboard/admin';
-    }
-    
-    if (userRole === 'teacher' && !isTeacherPath) {
-      return '/dashboard/teacher';
-    }
-    
-    if (userRole === 'student' && !isStudentPath) {
-      return '/dashboard/student';
-    }
-    
-    return false; // No redirect needed
-  };
-
-  // Handle role-based redirects
-  const redirectPath = checkRolePath();
+  const redirectPath = shouldRedirect();
   if (redirectPath) {
+    console.log(`Redirecting to ${redirectPath} based on role ${user.role}`);
     return <Navigate to={redirectPath} replace />;
   }
 

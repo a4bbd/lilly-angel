@@ -48,7 +48,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Check for existing session
     const storedUser = localStorage.getItem("user");
     if (storedUser) {
-      setUser(JSON.parse(storedUser));
+      try {
+        const parsedUser = JSON.parse(storedUser);
+        setUser(parsedUser);
+      } catch (error) {
+        console.error("Failed to parse stored user:", error);
+        localStorage.removeItem("user");
+      }
     }
     setIsLoading(false);
   }, []);
@@ -59,8 +65,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       // Simulate API call
       await new Promise(resolve => setTimeout(resolve, 500));
       
-      // Find user with matching email (just for demo)
-      const foundUser = MOCK_USERS.find(u => u.email.toLowerCase() === email.toLowerCase());
+      // Find user with matching email (case insensitive)
+      const foundUser = MOCK_USERS.find(u => 
+        u.email.toLowerCase() === email.toLowerCase()
+      );
+      
       if (!foundUser) {
         throw new Error("Invalid credentials");
       }
@@ -69,10 +78,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       setUser(foundUser);
       localStorage.setItem("user", JSON.stringify(foundUser));
+      console.log("Login successful:", foundUser);
       return foundUser;
     } catch (error) {
       console.error("Login failed:", error);
-      throw error;
+      return null;
     } finally {
       setIsLoading(false);
     }
